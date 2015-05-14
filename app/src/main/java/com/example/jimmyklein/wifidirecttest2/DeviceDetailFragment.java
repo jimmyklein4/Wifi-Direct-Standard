@@ -10,7 +10,10 @@ import android.net.Uri;
 import android.net.wifi.WpsInfo;
 import android.net.wifi.p2p.WifiP2pConfig;
 import android.net.wifi.p2p.WifiP2pDevice;
+import android.net.wifi.p2p.WifiP2pGroup;
+import android.net.wifi.p2p.WifiP2pManager.GroupInfoListener;
 import android.net.wifi.p2p.WifiP2pInfo;
+import android.net.wifi.p2p.WifiP2pManager;
 import android.net.wifi.p2p.WifiP2pManager.ConnectionInfoListener;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -35,11 +38,12 @@ import java.net.Socket;
  * A fragment that manages a particular peer and allows interaction with device
  * i.e. setting up network connection and transferring data.
  */
-public class DeviceDetailFragment extends Fragment implements ConnectionInfoListener {
+public class DeviceDetailFragment extends Fragment implements ConnectionInfoListener, GroupInfoListener {
 
     protected static final int CHOOSE_FILE_RESULT_CODE = 20;
     private View mContentView = null;
     private WifiP2pDevice device;
+    private WifiP2pGroup group;
     private WifiP2pInfo info;
     ProgressDialog progressDialog = null;
 
@@ -58,7 +62,7 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
             public void onClick(View v) {
                 WifiP2pConfig config = new WifiP2pConfig();
                 config.deviceAddress = device.deviceAddress;
-                //config.wps.setup = WpsInfo.PBC;
+                config.wps.setup = WpsInfo.PBC;
                 if (progressDialog != null && progressDialog.isShowing()) {
                     progressDialog.dismiss();
                 }
@@ -135,7 +139,7 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
 
         // InetAddress from WifiP2pInfo struct.
         view = (TextView) mContentView.findViewById(R.id.device_info);
-        view.setText("Group Owner IP - " + info.groupOwnerAddress.getHostAddress());
+       // view.setText("Passphrase - " + );
 
         // After the group negotiation, we assign the group owner as the file
         // server. The file server is single threaded, single connection server
@@ -153,6 +157,15 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
 
         // hide the connect button
         mContentView.findViewById(R.id.btn_connect).setVisibility(View.GONE);
+    }
+
+    public void onGroupInfoAvailable(final WifiP2pGroup group)
+    {
+        this.group = group;
+        this.getView().setVisibility(View.VISIBLE);
+
+        TextView view = (TextView)mContentView.findViewById(R.id.group_password);
+        view.setText(getResources().getString(R.string.password) + group.getPassphrase());
     }
 
     /**
