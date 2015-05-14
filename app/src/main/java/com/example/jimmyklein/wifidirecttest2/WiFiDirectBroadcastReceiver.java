@@ -77,6 +77,7 @@ public class WiFiDirectBroadcastReceiver extends BroadcastReceiver {
                 // info to find group owner IP
 
                 DeviceDetailFragment fragment = (DeviceDetailFragment) activity.getFragmentManager().findFragmentById(R.id.frag_detail);
+                manager.requestConnectionInfo(channel, fragment);
                 manager.requestGroupInfo(channel, fragment);
             } else {
                 // It's a disconnect

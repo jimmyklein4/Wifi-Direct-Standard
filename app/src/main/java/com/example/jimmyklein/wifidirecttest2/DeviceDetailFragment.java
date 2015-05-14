@@ -134,7 +134,7 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
 
         // The owner IP is now known.
         TextView view = (TextView) mContentView.findViewById(R.id.group_owner);
-        view.setText(getResources().getString(R.string.group_owner_text) + ((info.isGroupOwner == true) ? getResources().getString(R.string.yes)
+        view.setText(getResources().getString(R.string.group_owner_text) + ((info.isGroupOwner) ? getResources().getString(R.string.yes)
                 : getResources().getString(R.string.no)));
 
         // InetAddress from WifiP2pInfo struct.
@@ -162,10 +162,12 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
     public void onGroupInfoAvailable(final WifiP2pGroup group)
     {
         this.group = group;
-        this.getView().setVisibility(View.VISIBLE);
+        //if(group.isGroupOwner()) {
+            this.getView().setVisibility(View.VISIBLE);
 
-        TextView view = (TextView)mContentView.findViewById(R.id.group_password);
-        view.setText(getResources().getString(R.string.password) + group.getPassphrase());
+            TextView view = (TextView) mContentView.findViewById(R.id.group_password);
+            view.setText(getResources().getString(R.string.password) + group.getPassphrase());
+        //}
     }
 
     /**
