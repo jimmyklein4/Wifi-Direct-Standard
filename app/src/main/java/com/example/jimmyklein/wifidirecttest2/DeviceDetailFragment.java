@@ -30,7 +30,10 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.OutputStream;
+import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 
@@ -45,6 +48,7 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
     private WifiP2pDevice device;
     private WifiP2pGroup group;
     private WifiP2pInfo info;
+    private String ipaddress;
     ProgressDialog progressDialog = null;
 
     @Override
@@ -147,12 +151,63 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
         if (info.groupFormed && info.isGroupOwner) {
             new FileServerAsyncTask(getActivity(), mContentView.findViewById(R.id.status_text))
                     .execute();
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        Log.d(WiFiDirectActivity.TAG, "Entered thread owner");
+                        ServerSocket serverSocket = new ServerSocket(8987);
+                        serverSocket.setReuseAddress(true);
+                        Socket client = serverSocket.accept();
+                        ObjectInputStream objectInputStream = new ObjectInputStream(client.getInputStream());
+                        try {
+                            Object object = objectInputStream.readObject();
+                            if(object.getClass().equals(String.class) && ((String) object).equals("test")){
+                                ipaddress = client.getInetAddress().toString();
+                                Log.d(WiFiDirectActivity.TAG, "Client IP address: "+ client.getInetAddress());
+                            } else {
+                                Log.d(WiFiDirectActivity.TAG, "Failed at catching IP");
+                            }
+                        }catch(java.lang.ClassNotFoundException f){
+
+                        }
+                    } catch(java.io.IOException e){
+                        Log.d(WiFiDirectActivity.TAG, e.toString());
+                    }
+                }
+            }).start();
         } else if (info.groupFormed) {
             // The other device acts as the client. In this case, we enable the
             // get file button.
             mContentView.findViewById(R.id.btn_start_client).setVisibility(View.VISIBLE);
             ((TextView) mContentView.findViewById(R.id.status_text)).setText(getResources()
                     .getString(R.string.client_text));
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    Log.d(WiFiDirectActivity.TAG, "Entered thread not owner");
+                    Socket socket = new Socket();
+                    try {
+                        socket.setReuseAddress(true);
+                    }catch(java.net.SocketException e){
+                        Log.d(WiFiDirectActivity.TAG, e.toString());
+                    }
+                    try {
+                        Log.d(WiFiDirectActivity.TAG, "Entered try no2");
+                        socket.connect((new InetSocketAddress(info.groupOwnerAddress, 8987)), 5000);
+                        Log.d(WiFiDirectActivity.TAG, info.groupOwnerAddress.toString());
+                        OutputStream os = socket.getOutputStream();
+                        ObjectOutputStream oos = new ObjectOutputStream(os);
+                        oos.writeObject(new String("test"));
+                        oos.close();
+                        os.close();
+                        socket.close();
+                    } catch(java.io.IOException e){
+                        Log.d(WiFiDirectActivity.TAG, e.toString());
+                    }
+                }
+            }).start();
+
         }
 
         // hide the connect button
@@ -162,12 +217,14 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
     public void onGroupInfoAvailable(final WifiP2pGroup group)
     {
         this.group = group;
-        //if(group.isGroupOwner()) {
+        if(group.isGroupOwner()) {
             this.getView().setVisibility(View.VISIBLE);
 
             TextView view = (TextView) mContentView.findViewById(R.id.group_password);
-            view.setText(getResources().getString(R.string.password) + group.getPassphrase());
-        //}
+            if(ipaddress!=null) {
+                view.setText(getResources().getString(R.string.password) + ipaddress);
+            }
+        }
     }
 
     /**
