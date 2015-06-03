@@ -107,7 +107,7 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
                         // Allow user to pick an image from Gallery or other
                         // registered apps
                         Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-                        intent.setType("image/*");
+                        intent.setType("video/mp4");
                         startActivityForResult(intent, CHOOSE_FILE_RESULT_CODE);
                     }
                 });
@@ -122,9 +122,6 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
         // FileTransferService.
         Uri uri = data.getData();
         TextView statusText = (TextView) mContentView.findViewById(R.id.status_text);
-        //statusText.setText("Sending: " + uri);
-        //Log.d(TAG, "Intent----------- " + uri);
-        //Intent serviceIntent = new Intent(getActivity(), FileTransferService.class);
         for(int i=0;i<ipAddresses.size();i++) {
             statusText.setText("Sending: " + uri);
             Log.d(TAG, "Intent----------- " + uri);
@@ -225,11 +222,10 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
                     }
                 }
             }).start();
-
+            mContentView.findViewById(R.id.btn_connect).setVisibility(View.GONE);
         }
 
         // hide the connect button
-        mContentView.findViewById(R.id.btn_connect).setVisibility(View.GONE);
     }
 
     public void onGroupInfoAvailable(final WifiP2pGroup group)
@@ -305,7 +301,7 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
                 Log.d(TAG, "Server: connection done");
                 final File f = new File(Environment.getExternalStorageDirectory() + "/"
                         + context.getPackageName() + "/wifip2pshared-" + System.currentTimeMillis()
-                        + ".jpg");
+                        + ".mp4");
 
                 File dirs = new File(f.getParent());
                 if (!dirs.exists())
@@ -333,7 +329,7 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
                 statusText.setText("File copied - " + result);
                 Intent intent = new Intent();
                 intent.setAction(android.content.Intent.ACTION_VIEW);
-                intent.setDataAndType(Uri.parse("file://" + result), "image/*");
+                intent.setDataAndType(Uri.parse("file://" + result), "video/mp4");
                 context.startActivity(intent);
             }
 
