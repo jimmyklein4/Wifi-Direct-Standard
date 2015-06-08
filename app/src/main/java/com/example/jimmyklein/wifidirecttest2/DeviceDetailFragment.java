@@ -52,7 +52,6 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
     private WifiP2pDevice device;
     private WifiP2pGroup group;
     private WifiP2pInfo info;
-    private Boolean threadCheck = false;
     private ArrayList<InetAddress> ipAddresses;
     ProgressDialog progressDialog = null;
 
@@ -120,17 +119,18 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
 
         // User has picked an image. Transfer it to group owner i.e peer using
         // FileTransferService.
-        Uri uri = data.getData();
+        final Uri uri = data.getData();
         TextView statusText = (TextView) mContentView.findViewById(R.id.status_text);
+
+        final ArrayList<InetAddress> addresses = ipAddresses;
         for(int i=0;i<ipAddresses.size();i++) {
-            statusText.setText("Sending: " + uri);
-            Log.d(TAG, "Intent----------- " + uri);
             Intent serviceIntent = new Intent(getActivity(), FileTransferService.class);
             serviceIntent.setAction(FileTransferService.ACTION_SEND_FILE);
             serviceIntent.putExtra(FileTransferService.EXTRAS_FILE_PATH, uri.toString());
-            serviceIntent.putExtra(FileTransferService.EXTRAS_GROUP_OWNER_ADDRESS, ipAddresses.get(i).getHostAddress());
+            serviceIntent.putExtra(FileTransferService.EXTRAS_GROUP_OWNER_ADDRESS, addresses.get(i).getHostAddress());
             serviceIntent.putExtra(FileTransferService.EXTRAS_GROUP_OWNER_PORT, 8988);
             getActivity().startService(serviceIntent);
+            statusText.setText("Sending: " + uri);
         }
     }
 
@@ -352,7 +352,6 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
         try {
             while ((len = inputStream.read(buf)) != -1) {
                 out.write(buf, 0, len);
-
             }
             out.close();
             inputStream.close();
