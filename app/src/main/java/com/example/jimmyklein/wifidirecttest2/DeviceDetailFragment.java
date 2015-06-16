@@ -118,20 +118,12 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
 
-        // User has picked an image. Transfer it to group owner i.e peer using
-        // FileTransferService.
-        Uri uri = data.getData();
         TextView statusText = (TextView) mContentView.findViewById(R.id.status_text);
-        for(int i=0;i<ipAddresses.size();i++) {
-            statusText.setText("Sending: " + uri);
-            Log.d(TAG, "Intent----------- " + uri);
-            Intent serviceIntent = new Intent(getActivity(), FileTransferService.class);
-            serviceIntent.setAction(FileTransferService.ACTION_SEND_FILE);
-            serviceIntent.putExtra(FileTransferService.EXTRAS_FILE_PATH, uri.toString());
-            serviceIntent.putExtra(FileTransferService.EXTRAS_GROUP_OWNER_ADDRESS, ipAddresses.get(i).getHostAddress());
-            serviceIntent.putExtra(FileTransferService.EXTRAS_GROUP_OWNER_PORT, 8988);
-            getActivity().startService(serviceIntent);
-        }
+        // Send first ping to group owner.
+        //From there the group owner will ping to the remaining client
+        //Remaining client will then send the ping back to the host, who sends it back to the original sender
+
+        
     }
 
     @Override
@@ -156,7 +148,7 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
         // socket.
         if (info.groupFormed && info.isGroupOwner) {
             //new FileServerAsyncTask(getActivity(), mContentView.findViewById(R.id.status_text)).execute();
-            mContentView.findViewById(R.id.btn_start_client).setVisibility(View.VISIBLE);
+
             new Thread(new Runnable() {
                 @Override
                 public void run() {
@@ -192,8 +184,9 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
             }).start();
         } else if (info.groupFormed) {
             // The other device acts as the client. In this case, we enable the
-            // get file button.
-                new FileServerAsyncTask(getActivity(), mContentView.findViewById(R.id.status_text)).execute();
+            // get file button
+            mContentView.findViewById(R.id.btn_start_client).setVisibility(View.VISIBLE);
+	    new FileServerAsyncTask(getActivity(), mContentView.findViewById(R.id.status_text)).execute();
 
             ((TextView) mContentView.findViewById(R.id.status_text)).setText(getResources()
                     .getString(R.string.client_text));
@@ -363,4 +356,12 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
         return true;
     }
 
+    private byte[] getByteArray(){
+        byte[] tmp = new byte[64];
+
+        for(int i=0;i<64;i++){
+            tmp[i]=0xF;
+        }
+        return tmp;
+    }
 }
