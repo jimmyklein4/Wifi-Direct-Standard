@@ -52,7 +52,7 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
     private WifiP2pDevice device;
     private WifiP2pGroup group;
     private WifiP2pInfo info;
-    private Boolean threadCheck = false;
+    private Boolean isFirstSender = false;
     private ArrayList<InetAddress> ipAddresses;
     ProgressDialog progressDialog = null;
 
@@ -106,15 +106,13 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
                     public void onClick(View v) {
                         // Allow user to pick an image from Gallery or other
                         // registered apps
-                        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-                        intent.setType("video/mp4");
-                        startActivityForResult(intent, CHOOSE_FILE_RESULT_CODE);
+                        isFirstSender = true;
                     }
                 });
 
         return mContentView;
     }
-
+    /*
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
 
@@ -123,9 +121,9 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
         //From there the group owner will ping to the remaining client
         //Remaining client will then send the ping back to the host, who sends it back to the original sender
 
-        
-    }
 
+    }
+    */
     @Override
     public void onConnectionInfoAvailable(final WifiP2pInfo info)
     {
@@ -186,7 +184,7 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
             // The other device acts as the client. In this case, we enable the
             // get file button
             mContentView.findViewById(R.id.btn_start_client).setVisibility(View.VISIBLE);
-	    new FileServerAsyncTask(getActivity(), mContentView.findViewById(R.id.status_text)).execute();
+	        new FileServerAsyncTask(getActivity(), mContentView.findViewById(R.id.status_text)).execute();
 
             ((TextView) mContentView.findViewById(R.id.status_text)).setText(getResources()
                     .getString(R.string.client_text));
