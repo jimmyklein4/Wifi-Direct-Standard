@@ -39,13 +39,13 @@ public class ConnectionManager{
         }
     }
 
-    public InetAddress Listen(){
+    public InetAddress listen(){
         try {
             client = sSocket.accept();
             ObjectInputStream objectInputStream = new ObjectInputStream(client.getInputStream());
             try{
                 Object object = objectInputStream.readObject();
-                if(object.getClass().equals(byte.class)){
+                if(object.getClass().equals(byte.class) || object.getClass().equals(String.class)){
                     return client.getInetAddress();
                 }
             }catch(ClassNotFoundException f){
@@ -57,7 +57,7 @@ public class ConnectionManager{
         return null;
     }
 
-    public void CloseServerConnection(){
+    public void closeServerConnection(){
         try {
             sSocket.close();
         }catch(java.io.IOException e){
@@ -65,7 +65,7 @@ public class ConnectionManager{
         }
     }
 
-    public void SendPing(InetAddress addr, int port){
+    public void sendPing(InetAddress addr, int port){
         Socket socket = new Socket();
         try {
             socket.connect((new InetSocketAddress(addr, port)), 5000);
@@ -81,7 +81,7 @@ public class ConnectionManager{
         }
     }
 
-    public void SendObject(InetAddress addr, int port, Object obj){
+    public void sendObject(InetAddress addr, int port, Object obj){
         Socket socket = new Socket();
         try{
             socket.connect((new InetSocketAddress(addr, port)),5000);

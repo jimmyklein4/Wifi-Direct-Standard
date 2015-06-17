@@ -146,41 +146,29 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
         // socket.
         if (info.groupFormed && info.isGroupOwner) {
             //new FileServerAsyncTask(getActivity(), mContentView.findViewById(R.id.status_text)).execute();
-            connectionManager = new ConnectionManager(8988);
             new Thread(new Runnable() {
                 @Override
                 public void run() {
-                    try {
-                        Log.d(TAG, "Entered thread owner. My IP: " + info.groupOwnerAddress.getHostAddress());
-                        ServerSocket serverSocket = new ServerSocket(8987);
-                        serverSocket.setReuseAddress(true);
-                        Socket client = serverSocket.accept();
-                        ObjectInputStream objectInputStream = new ObjectInputStream(client.getInputStream());
-                        try {
-                            Object object = objectInputStream.readObject();
-                            if(object.getClass().equals(String.class) && ((String) object).equals("test")){
-                                if(ipAddresses == null){
-                                    ipAddresses = new ArrayList<>();
-                                }
-                                if(!ipAddresses.contains(client.getInetAddress())) {
-                                    ipAddresses.add(client.getInetAddress());
-                                }
-                                client.close();
-                                serverSocket.close();
-                                Log.d(TAG, "Client IP address: "+ client.getInetAddress().getHostAddress());
-                                Log.d(TAG, "Count: "+ ipAddresses.size());
-                            } else {
-                                Log.d(TAG, "Failed at catching IP");
-                            }
-                        }catch(ClassNotFoundException f){
-                            Log.d(TAG, f.toString());
-                        }
-                    } catch(IOException e){
-                        Log.d(TAG, e.toString());
+                    ConnectionManager tmpManager = new ConnectionManager(8987);
+                    InetAddress clientAddr = tmpManager.listen();
+                    if(ipAddresses == null){
+                        ipAddresses = new ArrayList<>();
                     }
+                    if(!ipAddresses.contains(clientAddr)){
+                        ipAddresses.add(clientAddr);
+                    }
+                    tmpManager.closeServerConnection();
                 }
             }).start();
-
+            connectionManager = new ConnectionManager(8988);
+            InetAddress firstSender = connectionManager.listen();
+            if(firstSender !=null && ipAddresses.size()==2) {
+                if(firstSender == ipAddresses.get(0)) {
+                    connectionManager.sendPing(ipAddresses.get(1), 8988);
+                } else {
+                    connectionManager.sendPing(ipAddresses.get(0),8988);
+                }
+            }
         } else if (info.groupFormed) {
             // The other device acts as the client. In this case, we enable the
             // get file button
@@ -192,8 +180,7 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
             new Thread(new Runnable() {
                 @Override
                 public void run() {
-                    Log.d(TAG, "Entered thread not owner");
-                    connectionManager.SendObject(info.groupOwnerAddress, 8987, new String("test"));
+                    connectionManager.sendObject(info.groupOwnerAddress, 8987, new String("test"));
                 }
             }).start();
             mContentView.findViewById(R.id.btn_connect).setVisibility(View.GONE);
