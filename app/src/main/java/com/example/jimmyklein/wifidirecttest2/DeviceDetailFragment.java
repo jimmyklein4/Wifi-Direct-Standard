@@ -104,9 +104,8 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
 
                     @Override
                     public void onClick(View v) {
-                        // Allow user to pick an image from Gallery or other
-                        // registered apps
                         isFirstSender = true;
+
                     }
                 });
 
@@ -180,6 +179,14 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
                     }
                 }
             }).start();
+            try {
+                ServerSocket serverSocket = new ServerSocket(8988);
+                serverSocket.setReuseAddress(true);
+                Socket client = serverSocket.accept();
+
+            } catch(java.io.IOException e){
+                Log.d(TAG, e.toString());
+            }
         } else if (info.groupFormed) {
             // The other device acts as the client. In this case, we enable the
             // get file button
