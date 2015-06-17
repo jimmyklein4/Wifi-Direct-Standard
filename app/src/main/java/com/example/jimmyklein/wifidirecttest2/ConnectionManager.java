@@ -13,7 +13,6 @@ import java.net.Socket;
 public class ConnectionManager{
 
     private Socket client;
-    private byte[] ping;
     private ServerSocket sSocket;
     private static String TAG = "ConnectionManager";
 
