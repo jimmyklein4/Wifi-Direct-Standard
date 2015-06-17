@@ -52,6 +52,7 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
     private WifiP2pDevice device;
     private WifiP2pGroup group;
     private WifiP2pInfo info;
+    private ConnectionManager connectionManager;
     private Boolean isFirstSender = false;
     private ArrayList<InetAddress> ipAddresses;
     ProgressDialog progressDialog = null;
@@ -145,7 +146,7 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
         // socket.
         if (info.groupFormed && info.isGroupOwner) {
             //new FileServerAsyncTask(getActivity(), mContentView.findViewById(R.id.status_text)).execute();
-
+            connectionManager = new ConnectionManager(8988);
             new Thread(new Runnable() {
                 @Override
                 public void run() {
@@ -179,14 +180,7 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
                     }
                 }
             }).start();
-            try {
-                ServerSocket serverSocket = new ServerSocket(8988);
-                serverSocket.setReuseAddress(true);
-                Socket client = serverSocket.accept();
 
-            } catch(java.io.IOException e){
-                Log.d(TAG, e.toString());
-            }
         } else if (info.groupFormed) {
             // The other device acts as the client. In this case, we enable the
             // get file button
@@ -199,25 +193,7 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
                 @Override
                 public void run() {
                     Log.d(TAG, "Entered thread not owner");
-                    Socket socket = new Socket();
-                    try {
-                        socket.setReuseAddress(true);
-                    }catch(java.net.SocketException e){
-                        Log.d(TAG, e.toString());
-                    }
-                    try {
-                        Log.d(TAG, "Entered try no2");
-                        socket.connect((new InetSocketAddress(info.groupOwnerAddress, 8987)), 5000);
-                        Log.d(TAG, info.groupOwnerAddress.toString());
-                        OutputStream os = socket.getOutputStream();
-                        ObjectOutputStream oos = new ObjectOutputStream(os);
-                        oos.writeObject(new String("test"));
-                        oos.close();
-                        os.close();
-                        socket.close();
-                    } catch(java.io.IOException e){
-                        Log.d(TAG, e.toString());
-                    }
+                    connectionManager.SendObject(info.groupOwnerAddress, 8987, new String("test"));
                 }
             }).start();
             mContentView.findViewById(R.id.btn_connect).setVisibility(View.GONE);
