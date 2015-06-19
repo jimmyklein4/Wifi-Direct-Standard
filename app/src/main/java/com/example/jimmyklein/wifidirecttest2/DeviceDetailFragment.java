@@ -191,8 +191,6 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
                 }
             }).start();
         } else if (info.groupFormed) {
-            // The other device acts as the client. In this case, we enable the
-            // get file button.
                 new FileServerAsyncTask(getActivity(), mContentView.findViewById(R.id.status_text)).execute();
 
             ((TextView) mContentView.findViewById(R.id.status_text)).setText(getResources()
