@@ -20,7 +20,8 @@ public class ConnectionManager{
     private ServerSocket serverSocket;
     private static String TAG = "ConnectionManager";
     private ArrayList<Socket> clients;
-
+    private long startTime, endTime;
+    private boolean isFirst = false;
     //We are the client
     public ConnectionManager(final InetAddress host){
         new Thread(new Runnable() {
@@ -53,6 +54,18 @@ public class ConnectionManager{
 
     }
 
+    public void setStartTime(long startTime){
+        this.startTime = startTime;
+    }
+
+    public void setEndTime(long endTime){
+        this.endTime = endTime;
+    }
+
+    public void setIsFirst(boolean isFirst){
+        this.isFirst = isFirst;
+    }
+
     public void serverConnect(){
         new Thread(new Runnable() {
             @Override
@@ -61,7 +74,8 @@ public class ConnectionManager{
                     if(clients==null){
                         clients = new ArrayList<>();
                     }
-                    clients.add(serverSocket.accept());
+                    Socket socket = serverSocket.accept();
+                    clients.add(socket);
                     if(clients.size()>0) {
                         serverListen(clients.get(clients.size() - 1));
                     }
@@ -73,20 +87,24 @@ public class ConnectionManager{
     }
 
     public void clientListen(){
+        final Socket tmpServer = server;
         new Thread(new Runnable() {
             @Override
             public void run() {
                 boolean notReceived = true;
                 while (notReceived) {
                     try {
-                        InputStream stream = server.getInputStream();
+                        InputStream stream = tmpServer.getInputStream();
                         byte[] data = new byte[64];
                         int count = stream.read(data);
                         if(count==64){
                             notReceived = false;
+                            if(isFirst){
+                                Log.d(TAG, " " + (System.currentTimeMillis()-startTime));
+                            }
                         }
                     } catch (java.io.IOException e) {
-                        Log.d(TAG, e.toString());
+
                     }
                 }
             }
@@ -122,7 +140,9 @@ public class ConnectionManager{
 
     public void closeServerConnection(){
         try {
-            serverSocket.close();
+            if(serverSocket!=null){
+                serverSocket.close();
+            }
         }catch(java.io.IOException e){
             Log.d(TAG, e.toString());
         }
