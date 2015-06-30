@@ -87,20 +87,21 @@ public class ConnectionManager{
     }
 
     public void clientListen(){
-        final Socket tmpServer = server;
         new Thread(new Runnable() {
             @Override
             public void run() {
                 boolean notReceived = true;
                 while (notReceived) {
                     try {
-                        InputStream stream = tmpServer.getInputStream();
+                        InputStream stream = server.getInputStream();
                         byte[] data = new byte[64];
                         int count = stream.read(data);
                         if(count==64){
                             notReceived = false;
                             if(isFirst){
                                 Log.d(TAG, " " + (System.currentTimeMillis()-startTime));
+                            } else {
+                                clientSendPing();
                             }
                         }
                     } catch (java.io.IOException e) {
@@ -124,14 +125,12 @@ public class ConnectionManager{
                         if(count==64){
                             if ((socket == clients.get(0)) && (clients.size() > 1)) {
                                 serverSendPing(clients.get(1));
-                                isListening=false;
                             } else if ((socket == clients.get(1)) && (clients.size() > 1)) {
                                 serverSendPing(clients.get(0));
-                                isListening=false;
                             }
                         }
                     } catch (java.io.IOException e) {
-                        Log.d(TAG, e.toString());
+                        Log.d(TAG, e.toString() + "serverlisten");
                     }
                 }
             }
@@ -156,7 +155,6 @@ public class ConnectionManager{
                     byte[] data = getByteArray();
                     DataOutputStream dataOutputStream = new DataOutputStream(server.getOutputStream());
                     dataOutputStream.write(data,0,64);
-                    dataOutputStream.close();
                 }catch(java.io.IOException e){
                     Log.d(TAG, e.toString());
                 }
@@ -172,9 +170,8 @@ public class ConnectionManager{
                     byte[] data = getByteArray();
                     DataOutputStream dataOutputStream = new DataOutputStream(otherClient.getOutputStream());
                     dataOutputStream.write(data,0,64);
-                    dataOutputStream.close();
                 }catch(java.io.IOException e){
-                    Log.d(TAG, e.toString());
+                    Log.d(TAG, e.toString() + "serversendping");
                 }
             }
         }).start();
