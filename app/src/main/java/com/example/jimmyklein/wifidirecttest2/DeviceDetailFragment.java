@@ -52,7 +52,8 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
     private WifiP2pDevice device;
     private WifiP2pGroup group;
     private WifiP2pInfo info;
-    private ConnectionManager connectionManager;
+    private ConnectionManager server;
+    private ConnectionManager client;
     private Boolean isFirstSender = false;
     private ArrayList<InetAddress> ipAddresses;
     private long startTime, endTime;
@@ -90,6 +91,7 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
 
                     @Override
                     public void onClick(View v) {
+                        server.closeServerConnection();
                         ((DeviceActionListener) getActivity()).disconnect();
                     }
                 });
@@ -101,9 +103,18 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
                     public void onClick(View v) {
                         isFirstSender = true;
                         startTime = System.currentTimeMillis();
-                        connectionManager.sendPing(info.groupOwnerAddress, 8988);
+                        client.clientSendPing();
+                        client.clientListen();
                     }
                 });
+        mContentView.findViewById(R.id.btn_listen).setOnClickListener(
+                new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v){
+                        client.clientListen();
+                    }
+                }
+        );
 
         return mContentView;
     }
@@ -126,51 +137,16 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
         view = (TextView) mContentView.findViewById(R.id.device_info);
 
         if (info.groupFormed && info.isGroupOwner) {
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    ConnectionManager tmpManager = new ConnectionManager(8987);
-                    InetAddress clientAddr = tmpManager.listen();
-                    if(ipAddresses == null){
-                        ipAddresses = new ArrayList<>();
-                    }
-                    if(!ipAddresses.contains(clientAddr)){
-                        ipAddresses.add(clientAddr);
-                    }
-                    tmpManager.closeServerConnection();
-                }
-            }).start();
-            connectionManager = new ConnectionManager(8988);
-            InetAddress firstSender = connectionManager.listen();
-            if(firstSender !=null && ipAddresses.size()==2) {
-                if(firstSender == ipAddresses.get(0)) {
-                    connectionManager.sendPing(ipAddresses.get(1), 8988);
-                } else {
-                    connectionManager.sendPing(ipAddresses.get(0), 8988);
-                }
+            if(server==null) {
+                server = new ConnectionManager();
             }
-            InetAddress secondSender = connectionManager.listen();
-            if(secondSender !=null){
-                connectionManager.sendPing(firstSender,8988);
-            }
+            server.serverConnect();
         } else if (info.groupFormed) {
             mContentView.findViewById(R.id.btn_start_client).setVisibility(View.VISIBLE);
-
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    connectionManager.sendObject(info.groupOwnerAddress, 8987, new String("test"));
-                }
-            }).start();
+            mContentView.findViewById(R.id.btn_listen).setVisibility(View.VISIBLE);
+            client = new ConnectionManager(info.groupOwnerAddress);
             mContentView.findViewById(R.id.btn_connect).setVisibility(View.GONE);
-            connectionManager = new ConnectionManager(8988);
-            InetAddress go = connectionManager.listen();
-            if(go != null){
-                endTime = System.currentTimeMillis();
-                if(isFirstSender){
-                    view.setText(getResources().getString(R.string.password)+ (endTime-startTime));
-                }
-            }
+            //InetAddress go = connectionManager.listen();
         }
 
         // hide the connect button
