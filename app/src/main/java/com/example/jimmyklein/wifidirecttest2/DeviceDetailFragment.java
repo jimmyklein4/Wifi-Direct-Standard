@@ -23,8 +23,6 @@ import com.example.jimmyklein.wifidirecttest2.DeviceListFragment.DeviceActionLis
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.InetAddress;
-import java.util.ArrayList;
 
 /**
  * A fragment that manages a particular peer and allows interaction with device
@@ -33,16 +31,12 @@ import java.util.ArrayList;
 public class DeviceDetailFragment extends Fragment implements ConnectionInfoListener, GroupInfoListener {
 
     public static final String TAG = "DeviceDetailFragment";
-    protected static final int CHOOSE_FILE_RESULT_CODE = 20;
     private View mContentView = null;
     private WifiP2pDevice device;
     private WifiP2pGroup group;
     private WifiP2pInfo info;
     private ConnectionManager server;
     private ConnectionManager client;
-    private Boolean isFirstSender = false;
-    private ArrayList<InetAddress> ipAddresses;
-    private long startTime, endTime;
     ProgressDialog progressDialog = null;
 
     @Override
@@ -77,7 +71,11 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
 
                     @Override
                     public void onClick(View v) {
-                        server.closeServerConnection();
+                        if(server!=null){
+                            server.closeServerConnection();
+                        } else if(client!=null){
+                            client.closeClientConnection();
+                        }
                         ((DeviceActionListener) getActivity()).disconnect();
                     }
                 });
@@ -87,7 +85,6 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
 
                     @Override
                     public void onClick(View v) {
-                        isFirstSender = true;
                         client.setStartTime(System.currentTimeMillis());
                         client.setIsFirst(true);
                         client.clientSendPing();
@@ -97,7 +94,7 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
         mContentView.findViewById(R.id.btn_listen).setOnClickListener(
                 new View.OnClickListener() {
                     @Override
-                    public void onClick(View v){
+                    public void onClick(View v) {
                         client.clientListen();
                     }
                 }
@@ -196,14 +193,5 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
             return false;
         }
         return true;
-    }
-
-    private byte[] getByteArray(){
-        byte[] tmp = new byte[64];
-
-        for(int i=0;i<64;i++){
-            tmp[i]=0xF;
-        }
-        return tmp;
     }
 }
