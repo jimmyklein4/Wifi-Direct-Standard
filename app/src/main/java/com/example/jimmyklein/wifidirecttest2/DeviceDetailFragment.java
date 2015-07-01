@@ -85,7 +85,6 @@ public class DeviceDetailFragment extends Fragment implements ConnectionInfoList
 
                     @Override
                     public void onClick(View v) {
-                        client.setStartTime(System.currentTimeMillis());
                         client.setIsFirst(true);
                         client.clientSendPing();
                         client.clientListen();
