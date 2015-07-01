@@ -160,8 +160,7 @@ public class ConnectionManager{
                 try {
                     byte[] data = getByteArray();
                     DataOutputStream dataOutputStream = new DataOutputStream(server.getOutputStream());
-                    setStartTime(System.currentTimeMillis());
-                    dataOutputStream.write(data, 0, 64);
+                    dataOutputStream.write(data,0,64);
                 }catch(java.io.IOException e){
                     Log.d(TAG, e.toString());
                 }
@@ -176,7 +175,7 @@ public class ConnectionManager{
                 try{
                     byte[] data = getByteArray();
                     DataOutputStream dataOutputStream = new DataOutputStream(otherClient.getOutputStream());
-                    dataOutputStream.write(data, 0, 64);
+                    dataOutputStream.write(data,0,64);
                 }catch(java.io.IOException e){
                     Log.d(TAG, e.toString() + "serversendping");
                 }
