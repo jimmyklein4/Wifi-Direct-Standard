@@ -17,16 +17,18 @@ public class ConnectionManager{
     private ArrayList<Socket> clients;
     private long startTime, endTime;
     private boolean isFirst = false;
-
+    private byte[] data;
     //We are the client
     public ConnectionManager(final InetAddress host){
+        data = new byte[64];
+        data = getByteArray();
         new Thread(new Runnable() {
             @Override
             public void run() {
-                try{
+                try {
                     server = new Socket(host, 8988);
                     server.setReuseAddress(true);
-                }catch(java.io.IOException e){
+                } catch (java.io.IOException e) {
                     Log.d(TAG, e.toString());
                 }
             }
@@ -36,7 +38,9 @@ public class ConnectionManager{
 
     //We are the host
     public ConnectionManager(){
-	    new Thread(new Runnable() {
+	    data = new byte[64];
+        data = getByteArray();
+        new Thread(new Runnable() {
             @Override
             public void run() {
                 try {
@@ -86,22 +90,23 @@ public class ConnectionManager{
         new Thread(new Runnable() {
             @Override
             public void run() {
-                boolean notReceived = true;
-                while (notReceived) {
+                int i=0;
+                while (i<25){
                     try {
                         InputStream stream = server.getInputStream();
-                        byte[] data = new byte[64];
                         int count = stream.read(data);
-                        if(count==64){
-                            notReceived = false;
-                            if(isFirst){
-                                Log.d(TAG, " " + (System.currentTimeMillis()-startTime));
+                        if (count == 64) {
+                            if (isFirst) {
+                                Log.d(TAG, " " + (System.currentTimeMillis() - startTime));
+                                i++;
+                                setStartTime(System.currentTimeMillis());
+                                clientSendPing();
                             } else {
                                 clientSendPing();
                             }
                         }
                     } catch (java.io.IOException e) {
-
+                        Log.d(TAG, e.toString());
                     }
                 }
             }
@@ -116,7 +121,6 @@ public class ConnectionManager{
                 while(isListening) {
                     try {
                         InputStream stream = socket.getInputStream();
-                        byte[] data = new byte[64];
                         int count = stream.read(data);
                         if(count==64){
                             if ((socket == clients.get(0)) && (clients.size() > 1)) {
@@ -158,7 +162,6 @@ public class ConnectionManager{
             @Override
             public void run() {
                 try {
-                    byte[] data = getByteArray();
                     DataOutputStream dataOutputStream = new DataOutputStream(server.getOutputStream());
                     dataOutputStream.write(data,0,64);
                 }catch(java.io.IOException e){
@@ -173,7 +176,6 @@ public class ConnectionManager{
             @Override
             public void run() {
                 try{
-                    byte[] data = getByteArray();
                     DataOutputStream dataOutputStream = new DataOutputStream(otherClient.getOutputStream());
                     dataOutputStream.write(data,0,64);
                 }catch(java.io.IOException e){
