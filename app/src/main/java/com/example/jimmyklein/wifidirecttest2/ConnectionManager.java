@@ -123,11 +123,15 @@ public class ConnectionManager{
                         InputStream stream = socket.getInputStream();
                         int count = stream.read(data);
                         if(count==64){
+                            serverSendPing(clients.get(0));
+                            /*
+                            This is for 3 total phones
                             if ((socket == clients.get(0)) && (clients.size() > 1)) {
                                 serverSendPing(clients.get(1));
                             } else if ((socket == clients.get(1)) && (clients.size() > 1)) {
                                 serverSendPing(clients.get(0));
                             }
+                            */
                         }
                     } catch (java.io.IOException e) {
                         Log.d(TAG, e.toString() + "serverlisten");
